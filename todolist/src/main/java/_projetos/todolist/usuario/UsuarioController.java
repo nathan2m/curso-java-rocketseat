@@ -19,7 +19,7 @@ public class UsuarioController {
     private IUsuarioRepository usuarioRepository;
 
     @PostMapping("/")
-    public ResponseEntity criar(@RequestBody UsuarioModel usuarioModel){
+    public ResponseEntity<Object> criar(@RequestBody UsuarioModel usuarioModel){
         var usuario = this.usuarioRepository.findByUsuario(usuarioModel.getUsuario());
         if (usuario != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Usuário já existe");

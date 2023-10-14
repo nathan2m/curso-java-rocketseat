@@ -26,7 +26,7 @@ public class TarefaController {
     private ITarefaRepository tarefaRepository;
 
     @PostMapping("/")
-    public ResponseEntity criar(@RequestBody TarefaModel tarefaModel, HttpServletRequest request) {
+    public ResponseEntity<Object> criar(@RequestBody TarefaModel tarefaModel, HttpServletRequest request) {
         var idUsuario = request.getAttribute("idUsuario");
         tarefaModel.setIdUsuario((UUID) idUsuario);
 
@@ -52,12 +52,22 @@ public class TarefaController {
     }
 
     @PutMapping("/{id}")
-    public TarefaModel atualizar(@RequestBody TarefaModel tarefaModel, HttpServletRequest request,
+    public ResponseEntity<Object> atualizar(@RequestBody TarefaModel tarefaModel, HttpServletRequest request,
             @PathVariable UUID id) {
-        
         var tarefa = this.tarefaRepository.findById(id).orElse(null);
-        Utils.copyNonNullProperties(tarefaModel, tarefa);
         
-        return this.tarefaRepository.save(tarefa);
+        if (tarefa == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Tarefa não encontrada.");
+        }
+        
+        var idUsuario = request.getAttribute("idUsuario");
+        if (!tarefa.getIdUsuario().equals(idUsuario)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Usuário não tem permissão para alterar essa tarefa.");
+        }
+        
+        Utils.copyNonNullProperties(tarefaModel, tarefa);
+        var tarefaAtualizada = this.tarefaRepository.save(tarefa);
+        
+        return ResponseEntity.status(HttpStatus.OK).body(tarefaAtualizada);
     }
 }
